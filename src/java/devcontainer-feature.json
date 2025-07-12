@@ -1,0 +1,13 @@
+{
+    "id": "java",
+    "version": "1.0.0",
+    "name": "java",
+    "containerEnv": {
+        "JDK_STABLE": "/opt/hbdesiato.github.io/temurin/stable",
+        "JDK_LATEST": "/opt/hbdesiato.github.io/temurin/latest",
+        "PATH": "$JDK_STABLE/bin:$PATH"
+    },
+    "installsAfter": [
+        "ghcr.io/devcontainers/features/common-utils"
+    ]
+}
