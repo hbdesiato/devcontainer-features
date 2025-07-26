@@ -2,19 +2,15 @@
 set -e
 dl_tool="$(dirname $0)/dl-temurin"
 url="https://api.adoptium.net/v3/info/available_releases"
-echo "getting: $url"
+echo "getting: $url" >&2
 releases=$(curl "$url")
 latest=$(echo "$releases" | jq -r .most_recent_feature_release)
-install_dir=$("$dl_tool" "$latest")
-install_sym="${install_dir}/../latest"
-rm -f "$install_sym"
-ln -s "$(basename $install_dir)" "$install_sym"
-
 stable=$(echo "$releases" | jq -r .most_recent_lts)
 if [ "$latest" == "$stable" ]; then
     stable=$(echo $releases | jq "[.available_lts_releases[] | select(. < $stable)] | max")
 fi
 install_dir=$("$dl_tool" "$stable")
-install_sym="${install_dir}/../stable"
+install_sym=$(realpath "${install_dir}/../stable")
 rm -f "$install_sym"
 ln -s "$(basename $install_dir)" "$install_sym"
+echo "$install_sym"

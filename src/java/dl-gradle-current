@@ -6,6 +6,7 @@ echo "getting: $url" >&2
 current=$(curl "$url")
 version=$(echo "$current" | jq -r .version)
 install_dir=$("$dl_tool" "$version")
-install_sym="${install_dir}/../current"
+install_sym=$(realpath "${install_dir}/../current")
 rm -f "$install_sym"
 ln -s "$(basename $install_dir)" "$install_sym"
+echo "$install_sym"
