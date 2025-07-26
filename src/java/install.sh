@@ -1,17 +1,17 @@
 #!/bin/sh
 scripts="$(realpath $(dirname $0))"
-temurin=/opt/hbdesiato.github.io/temurin
-mkdir -p "$temurin"
-cd "$temurin"
-"$scripts/dl-temurin-bundle.sh"
-rm *.tgz *.tgz.checksum
+export DL_TOOLS=/opt/dl-tools
+tools_bin="$DL_TOOLS/bin"
+mkdir -p "$tools_bin"
 
-gradle=/opt/hbdesiato.github.io/gradle
-mkdir -p "$gradle"
-cd "$gradle"
-"$scripts/dl-gradle-current.sh"
-rm *.zip *.zip.checksum
-ln -s /opt/hbdesiato.github.io/gradle/current/bin/gradle /usr/local/bin/gradle
+"$scripts/dl-temurin-bundle"
+
+"$scripts/dl-gradle-current"
+ln -s "$DL_TOOLS/gradle/current/bin/gradle" "$tools_bin/gradle"
+
+for script in "$scripts"/dl-*; do
+    ln -s "$script" "$tools_bin/$(basename "$script")"
+done
 
 # Ensure that login shells get the correct path if the user updated the PATH using ENV.
 rm -f /etc/profile.d/00-restore-env.sh

@@ -1,0 +1,32 @@
+#!/bin/sh
+set -e
+dl_tools=${DL_TOOLS:-${XDG_STATE_HOME:-$HOME/.local/state}/dl-tools}
+dl_home=${DL_TOOLS_GRADLE:-${dl_tools}/gradle}
+version=${1:?missing argument <version>}
+release_name="gradle-$version"
+release_dir="${dl_home}/${release_name}"
+mkdir -p "$release_dir"
+(
+    flock 9
+    if [ ! -e "$release_dir/bin" ]; then
+        archive_name="${release_name}-bin.zip"
+        archive_file="${dl_home}/${archive_name}"
+        checksum_file="${archive_file}.checksum"
+        link="https://services.gradle.org/distributions/$archive_name"
+        checksumUrl="https://services.gradle.org/distributions/${archive_name}.sha256"
+        echo "getting: $checksumUrl" >&2
+        checksum=$(curl -L "$checksumUrl")
+        echo "$checksum" | base64 -d > /dev/null
+        echo "$checksum *$archive_file" > "$checksum_file"
+        [ ! -e "$archive_file" ] || sha256sum -c "$checksum_file" >&2 || rm -f "$archive_file"
+        if [ ! -e "$archive_file" ]; then
+            echo "downloading: $link" >&2
+            curl -Lo "$archive_file" "$link"
+        fi
+        sha256sum -c "$checksum_file" >&2
+        unzip "$archive_file" -d "$dl_home" >/dev/null
+        rm "$archive_file"
+        rm "$checksum_file"
+    fi
+) 9<"$release_dir"
+echo "$release_dir"

@@ -1,0 +1,34 @@
+#!/bin/sh
+set -e
+dl_tools=${DL_TOOLS:-${XDG_STATE_HOME:-$HOME/.local/state}/dl-tools}
+dl_home=${DL_TOOLS_TEMURIN:-${dl_tools}/temurin}
+release=${1:?missing argument <release>}
+arch=$(uname -m)
+[ "$arch" = x86_64 ] && arch=x64
+[ "$(. /etc/os-release; echo "$ID")" = alpine ] && os=alpine-linux || os=linux
+url="https://api.adoptium.net/v3/assets/latest/$release/hotspot?architecture=$arch&image_type=jdk&os=$os&vendor=eclipse"
+echo "getting: $url" >&2
+assets=$(curl "$url")
+release_name=$(echo "$assets" | jq -r .[0].release_name)
+release_dir="${dl_home}/${release_name}"
+mkdir -p "$release_dir"
+(
+    flock 9
+    if [ ! -e "${release_dir}/bin" ]; then
+        archive_file="${release_dir}.tgz"
+        checksum_file="${archive_file}.checksum"
+        link=$(echo "$assets" | jq -r .[0].binary.package.link)
+        checksum=$(echo "$assets" | jq -r .[0].binary.package.checksum)
+        echo "$checksum *$archive_file" > "$checksum_file"
+        [ ! -e "$archive_file" ] || sha256sum -c "$checksum_file" >&2 || rm "$archive_file"
+        if [ ! -e "$archive_file" ]; then
+            echo "downloading: $link" >&2
+            curl -Lo "$archive_file" "$link"
+        fi
+        sha256sum -c "$checksum_file" >&2
+        tar -C "$dl_home" -xzf "$archive_file"
+        rm "$archive_file"
+        rm "$checksum_file"
+    fi
+) 9<"$release_dir"
+echo "$release_dir"

@@ -3,9 +3,8 @@
     "version": "1.0.0",
     "name": "java",
     "containerEnv": {
-        "JDK_STABLE": "/opt/hbdesiato.github.io/temurin/stable",
-        "JDK_LATEST": "/opt/hbdesiato.github.io/temurin/latest",
-        "PATH": "$JDK_STABLE/bin:$PATH"
+        "JAVA_HOME": "/opt/dl-tools/temurin/stable",
+        "PATH": "/opt/dl-tools/bin:/opt/dl-tools/temurin/latest/bin:$PATH"
     },
     "installsAfter": [
         "ghcr.io/devcontainers/features/common-utils"
