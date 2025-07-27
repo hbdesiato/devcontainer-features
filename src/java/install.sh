@@ -17,14 +17,14 @@ jdk_stable=$("$scripts/dl-temurin-stable")
 gradle_current=$("$scripts/dl-gradle-current")
 ln -s "$gradle_current/bin/gradle" "$tools_bin/gradle"
 
-user_home=$( getent passwd $USERNAME | cut -d: -f6 )
-gradle_user_home="$user_home/.gradle"
-mkdir -p "$gradle_user_home"
-echo "org.gradle.java.installations.paths=$jdk_latest" >> "$gradle_user_home/gradle.properties"
+cat > /etc/profile.d/50-configure-gradle.sh <<EOC
+if [ ! -e "\$HOME/.gradle/gradle.properties" ]; then
+    mkdir -p "\$HOME/.gradle"
+    echo "org.gradle.java.installations.paths=$jdk_latest" > "\$HOME/.gradle/gradle.properties"
+fi
+EOC
 
-for script in "$scripts"/dl-*; do
-    ln -s "$script" "$tools_bin/$(basename "$script")"
-done
+mv "$scripts"/dl-* "$tools_bin/"
 
 # Ensure that login shells get the correct path if the user updated the PATH using ENV.
 rm -f /etc/profile.d/00-restore-env.sh
